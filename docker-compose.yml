@@ -20,6 +20,18 @@ services:
     networks:
       - nanaban-network
 
+  migrate:
+    image: migrate/migrate
+    container_name: nanaban-migrate
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database", "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable", "up"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nanaban-network
+
   app:
     build:
       context: .
@@ -28,14 +40,19 @@ services:
     ports:
       - "${APP_PORT}:8080"
     environment:
+      - APP_PORT=${APP_PORT}
+      - APP_HOST=${APP_HOST}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - nanaban-network
     restart: unless-stopped
