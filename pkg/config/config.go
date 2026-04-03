@@ -26,7 +26,7 @@ type DBConfig struct {
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
-			Host: getEnv("APP_HOST", "0.0.0.0"),
+			Host: getEnv("APP_HOST", "http://localhost"),
 			Port: getEnv("APP_PORT", "8080"),
 		},
 		DB: DBConfig{

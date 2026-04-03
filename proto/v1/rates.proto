@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/GGnet123/tech_assignment_nanaban/pkg/pb/v1";
+
+service RateService {
+  rpc GetRates (GetRatesRequest) returns (GetRatesResponse);
+}
+
+enum RateCalcMethod {
+  RATE_CALC_METHOD_UNSPECIFIED = 0;
+  RATE_CALC_METHOD_TOP_N = 1;
+  RATE_CALC_METHOD_AVG_NM = 2;
+}
+
+message GetRatesRequest {
+  RateCalcMethod method = 1;
+  uint32 n = 2;
+  uint32 m = 3;
+}
+
+message GetRatesResponse {
+  double ask = 1;
+  double bid = 2;
+  int64 timestamp_unix = 3;
+}
+
+

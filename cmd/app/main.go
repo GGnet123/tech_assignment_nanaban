@@ -1,13 +1,21 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/GGnet123/tech_assignment_nanaban/internal/api"
+	"github.com/GGnet123/tech_assignment_nanaban/internal/service"
+	"github.com/GGnet123/tech_assignment_nanaban/internal/transport/grpc/rates"
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/config"
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/logger"
 	"github.com/joho/godotenv"
-	"net/http"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"net"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -20,24 +28,43 @@ func main() {
 	}
 
 	log := logger.New()
-	router := setupRouter(cfg, log)
 
-	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
-		Handler:      router,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	serverErrors := make(chan error, 1)
-	go func() {
-		serverErrors <- server.ListenAndServe()
-	}()
-
-	select {
-	case err := <-serverErrors:
-		log.Error("Failed to listen and server", "error", err)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.Port))
+	if err != nil {
+		log.Error("listen: %v", err)
 		os.Exit(1)
 	}
+
+	restyClient := api.NewClient(fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port))
+	ratesService := service.NewRateService(restyClient)
+	grpcServer := grpc.NewServer()
+	rates.Register(grpcServer, log, ratesService)
+
+	healthServer := health.NewServer()
+	healthpb.RegisterHealthServer(grpcServer, healthServer)
+
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Error("serve: %v", err)
+		os.Exit(1)
+	}
+
+	// exit channels that listens to process kill
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+
+	<-exit
+
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+	grpcServer.GracefulStop()
+}
+
+func checkDB(db *sql.DB, healthServer *health.Server) {
+	if err := db.Ping(); err != nil {
+		healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+		return
+	}
+
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 }
