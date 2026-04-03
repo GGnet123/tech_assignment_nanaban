@@ -1,3 +1,6 @@
+include .env
+export
+
 proto-gen:
 	protoc \
 		--proto_path=proto \
@@ -7,14 +10,16 @@ proto-gen:
 		--go-grpc_opt=paths=source_relative \
 		proto/v1/*.proto
 
+MIGRATE_CMD=docker compose run --rm migrate -path /migrations -database "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable&search_path=public"
+
 migrate-up:
-	docker compose run migrate up
+	$(MIGRATE_CMD) up
 
 migrate-down:
-	docker compose run migrate down
+	$(MIGRATE_CMD) down
 
 migrate-create:
-	docker compose run migrate create -ext sql -dir /migrations -seq $(name)
+	$(MIGRATE_CMD) create -ext sql -dir /migrations -seq $(name)
 
 build:
 	docker compose build

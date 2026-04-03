@@ -9,9 +9,8 @@ type Resty struct {
 	client *resty.Client
 }
 
-func NewClient(baseURL string) *Resty {
+func NewClient() *Resty {
 	client := resty.New().
-		SetBaseURL(baseURL).
 		SetTimeout(10 * time.Second).
 		SetRetryCount(3)
 

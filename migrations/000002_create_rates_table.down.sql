@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS app.rates CASCADE;
+DROP TYPE IF EXISTS app.side_type;

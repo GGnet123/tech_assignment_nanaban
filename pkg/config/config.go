@@ -17,6 +17,7 @@ type ServerConfig struct {
 }
 
 type DBConfig struct {
+	Host     string
 	Port     string
 	User     string
 	Password string
@@ -30,6 +31,7 @@ func Load() (*Config, error) {
 			Port: getEnv("APP_PORT", "8080"),
 		},
 		DB: DBConfig{
+			Host:     getEnv("DB_HOST", "postgres"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "exchange"),
 			Password: getEnv("DB_PASSWORD", "exchange_password"),
@@ -42,6 +44,16 @@ func Load() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (c *Config) GetDSN() string {
+	return fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s",
+		c.DB.Host,
+		c.DB.User,
+		c.DB.Password,
+		c.DB.DBName,
+	)
 }
 
 func getEnv(key, defaultValue string) string {

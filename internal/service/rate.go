@@ -6,6 +6,7 @@ import (
 	"github.com/GGnet123/tech_assignment_nanaban/internal/api"
 	api2 "github.com/GGnet123/tech_assignment_nanaban/internal/domain/api"
 	"github.com/GGnet123/tech_assignment_nanaban/internal/domain/rate"
+	"github.com/GGnet123/tech_assignment_nanaban/internal/repo"
 	v1 "github.com/GGnet123/tech_assignment_nanaban/pkg/pb/v1"
 	"golang.org/x/sync/errgroup"
 	"strconv"
@@ -16,10 +17,11 @@ var InvalidMErr = errors.New("invalid M value")
 
 type Rate struct {
 	api *api.Resty
+	db  *repo.DB
 }
 
-func NewRateService(api *api.Resty) *Rate {
-	return &Rate{api: api}
+func NewRateService(api *api.Resty, db *repo.DB) *Rate {
+	return &Rate{api: api, db: db}
 }
 
 // Calculate - calculates bid and ask prices, accepts topN and avgNM methods

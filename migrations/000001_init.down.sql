@@ -1,9 +1,11 @@
-DROP FUNCTION IF EXISTS attach_updated_at_trigger(TEXT);
+DROP FUNCTION IF EXISTS app.attach_updated_at_trigger(TEXT);
 
-DROP FUNCTION IF EXISTS set_updated_at();
+DROP FUNCTION IF EXISTS app.set_updated_at();
 
 DROP SCHEMA IF EXISTS app CASCADE;
 
-SET search_path TO public;
+DO $$ BEGIN
+  EXECUTE format('ALTER DATABASE %I SET search_path TO public', current_database());
+END $$;
 
 RESET TIME ZONE;
