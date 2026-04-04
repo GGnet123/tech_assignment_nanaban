@@ -1,6 +1,10 @@
 include .env
 export
 
+lint:
+	docker compose --profile tools run --rm lint
+lint-fix:
+	docker compose --profile tools run --rm lint golangci-lint run --fix ./...
 proto-gen:
 	protoc \
 		--proto_path=proto \

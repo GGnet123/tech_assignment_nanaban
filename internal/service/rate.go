@@ -12,16 +12,50 @@ import (
 	"strconv"
 )
 
-var InvalidNErr = errors.New("invalid N value")
-var InvalidMErr = errors.New("invalid M value")
+var ErrInvalidN = errors.New("invalid N value")
+var ErrInvalidM = errors.New("invalid M value")
 
 type Rate struct {
-	api *api.Resty
-	db  *repo.DB
+	api  *api.Resty
+	repo *repo.DB
 }
 
-func NewRateService(api *api.Resty, db *repo.DB) *Rate {
-	return &Rate{api: api, db: db}
+func NewRateService(api *api.Resty, repo *repo.DB) *Rate {
+	return &Rate{api: api, repo: repo}
+}
+
+func (r Rate) SaveRates(ctx context.Context, bid, ask float64, timestamp int64) error {
+	tx, err := r.repo.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = r.repo.SaveRate(ctx, rate.SaveRate{
+		Price:     bid,
+		Side:      rate.SideBid,
+		Timestamp: timestamp,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = r.repo.SaveRate(ctx, rate.SaveRate{
+		Price:     ask,
+		Side:      rate.SideAsk,
+		Timestamp: timestamp,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = r.repo.CommitTx(ctx, tx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Calculate - calculates bid and ask prices, accepts topN and avgNM methods
@@ -32,6 +66,7 @@ func (r Rate) Calculate(ctx context.Context, method v1.RateCalcMethod, N, M int)
 	}
 
 	var response rate.Result
+	response.Timestamp = data.Timestamp
 
 	switch method {
 	case v1.RateCalcMethod_RATE_CALC_METHOD_TOP_N:
@@ -60,11 +95,11 @@ func getAvgNM(ctx context.Context, N, M int, data *api2.OrderBook) (rate.Result,
 	var response rate.Result
 	g.Go(func() error {
 		if N >= len(data.Asks) {
-			return InvalidNErr
+			return ErrInvalidN
 		}
 
 		if M >= len(data.Asks) {
-			return InvalidMErr
+			return ErrInvalidM
 		}
 
 		total := 0.0
@@ -83,11 +118,11 @@ func getAvgNM(ctx context.Context, N, M int, data *api2.OrderBook) (rate.Result,
 
 	g.Go(func() error {
 		if N >= len(data.Asks) {
-			return InvalidNErr
+			return ErrInvalidN
 		}
 
 		if M >= len(data.Asks) {
-			return InvalidMErr
+			return ErrInvalidM
 		}
 
 		total := 0.0
@@ -115,7 +150,7 @@ func getTopN(ctx context.Context, N int, data *api2.OrderBook) (rate.Result, err
 	var response rate.Result
 	g.Go(func() error {
 		if N >= len(data.Bids) {
-			return InvalidNErr
+			return ErrInvalidN
 		}
 		val, err := strconv.ParseFloat(data.Bids[N].Price, 64)
 		if err != nil {
@@ -127,7 +162,7 @@ func getTopN(ctx context.Context, N int, data *api2.OrderBook) (rate.Result, err
 
 	g.Go(func() error {
 		if N >= len(data.Asks) {
-			return InvalidNErr
+			return ErrInvalidN
 		}
 		val, err := strconv.ParseFloat(data.Asks[N].Price, 64)
 		if err != nil {

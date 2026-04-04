@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -21,7 +22,7 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	_ = godotenv.Load()
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -36,13 +37,13 @@ func main() {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.Port))
 	if err != nil {
-		log.Error("listen: %v", err)
+		log.Error("listen: %v", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	db, err := repo.NewDB(ctx, cfg.GetDSN())
 	if err != nil {
-		log.Error("Couldn't create db connection: %v", err)
+		log.Error("Couldn't create db connection: %v", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -52,7 +53,7 @@ func main() {
 	// grpc server
 	grpcServer := grpc.NewServer()
 	// register our service
-	rates.Register(grpcServer, log, ratesService, db)
+	rates.Register(grpcServer, log, ratesService)
 
 	// init and register health for our server
 	healthServer := health.NewServer()
@@ -64,7 +65,7 @@ func main() {
 	reflection.Register(grpcServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Error("serve: %v", err)
+		log.Error("serve: %v", slog.Any("error", err))
 		os.Exit(1)
 	}
 

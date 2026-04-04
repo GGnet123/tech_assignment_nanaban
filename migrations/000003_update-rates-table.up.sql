@@ -1,0 +1,1 @@
+ALTER TABLE rates ADD COLUMN timestamp INT;

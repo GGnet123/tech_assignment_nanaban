@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -56,8 +54,19 @@ services:
       - nanaban-network
     restart: unless-stopped
 
+  lint:
+    image: golangci/golangci-lint:latest-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - lint-cache:/root/.cache
+    command: golangci-lint run ./...
+    profiles:
+      - tools
+
 volumes:
   postgres_data:
+  lint-cache:
 
 networks:
   nanaban-network:

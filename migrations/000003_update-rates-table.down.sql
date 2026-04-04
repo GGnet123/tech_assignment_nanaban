@@ -1,0 +1,1 @@
+ALTER TABLE app.rates DROP COLUMN timestamp;

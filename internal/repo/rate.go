@@ -8,8 +8,8 @@ import (
 func (db *DB) SaveRate(ctx context.Context, rate rate.SaveRate) error {
 	_, err := db.conn.Exec(
 		ctx,
-		"INSERT INTO rates (price, side) VALUES ($1, $2)",
-		rate.Price, rate.Side,
+		"INSERT INTO rates (price, side, timestamp) VALUES ($1, $2, $3)",
+		rate.Price, rate.Side, rate.Timestamp,
 	)
 	if err != nil {
 		return err
