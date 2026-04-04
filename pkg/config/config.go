@@ -15,7 +15,6 @@ type Config struct {
 type ServerConfig struct {
 	Host string
 	Port string
-	Env  string
 }
 
 type DBConfig struct {
@@ -52,8 +51,9 @@ func Load() (*Config, error) {
 
 func (c *Config) GetDSN() string {
 	return fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s",
+		"host=%s port=%s user=%s password=%s dbname=%s",
 		c.DB.Host,
+		c.DB.Port,
 		c.DB.User,
 		c.DB.Password,
 		c.DB.DBName,

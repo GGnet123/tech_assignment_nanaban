@@ -1,11 +1,11 @@
-CREATE TYPE side_type AS ENUM ('ask', 'bid');
+CREATE TYPE app.side_type AS ENUM ('ask', 'bid');
 
-CREATE TABLE rates (
+CREATE TABLE app.rates (
     id SERIAL PRIMARY KEY,
     price FLOAT NOT NULL,
-    side side_type NOT NULL,
+    side app.side_type NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-SELECT attach_updated_at_trigger('rates');
+SELECT app.attach_updated_at_trigger('rates');

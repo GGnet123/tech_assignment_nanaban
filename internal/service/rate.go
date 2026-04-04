@@ -48,7 +48,7 @@ func (r Rate) SaveRates(ctx context.Context, bid, ask float64, timestamp int64) 
 		return fail(err, tx)
 	}
 
-	err = r.repo.SaveRate(ctx, rate.SaveRate{
+	err = r.repo.SaveRate(ctx, tx, rate.SaveRate{
 		Price:     bid,
 		Side:      rate.SideBid,
 		Timestamp: timestamp,
@@ -58,7 +58,7 @@ func (r Rate) SaveRates(ctx context.Context, bid, ask float64, timestamp int64) 
 		return fail(err, tx)
 	}
 
-	err = r.repo.SaveRate(ctx, rate.SaveRate{
+	err = r.repo.SaveRate(ctx, tx, rate.SaveRate{
 		Price:     ask,
 		Side:      rate.SideAsk,
 		Timestamp: timestamp,

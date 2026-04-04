@@ -30,7 +30,7 @@ type mockRepo struct {
 	savedRates  []rate.SaveRate
 }
 
-func (m *mockRepo) BeginTx(_ context.Context) (pgx.Tx, error) {
+func (m *mockRepo) BeginTx(_ context.Context, _ ...pgx.TxOptions) (pgx.Tx, error) {
 	return nil, m.beginErr
 }
 
@@ -42,7 +42,7 @@ func (m *mockRepo) RollbackTx(_ context.Context, _ pgx.Tx) error {
 	return m.rollbackErr
 }
 
-func (m *mockRepo) SaveRate(_ context.Context, r rate.SaveRate) error {
+func (m *mockRepo) SaveRate(_ context.Context, _ pgx.Tx, r rate.SaveRate) error {
 	if m.saveErr != nil {
 		return m.saveErr
 	}

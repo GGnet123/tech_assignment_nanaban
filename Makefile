@@ -1,6 +1,9 @@
 include .env
 export
 
+test:
+	go test ./... -race
+
 lint:
 	docker compose --profile tools run --rm lint
 lint-fix:

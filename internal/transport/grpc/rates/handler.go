@@ -20,7 +20,7 @@ func (s *Server) GetRates(ctx context.Context, request *v1.GetRatesRequest) (*v1
 	s.log.Info("Storing rates", zap.Any("result", result))
 	err = s.rateService.SaveRates(ctx, result.Bid, result.Ask, result.Timestamp)
 	if err != nil {
-		s.log.Info("Failed to store rates", zap.Error(err))
+		s.log.Error("Failed to store rates", zap.Error(err))
 		return nil, err
 	}
 	return &v1.GetRatesResponse{

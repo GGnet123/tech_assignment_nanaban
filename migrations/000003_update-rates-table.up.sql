@@ -1,1 +1,1 @@
-ALTER TABLE rates ADD COLUMN timestamp INT;
+ALTER TABLE app.rates ADD COLUMN timestamp INT NOT NULL DEFAULT 0;

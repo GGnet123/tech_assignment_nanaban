@@ -9,10 +9,10 @@ import (
 )
 
 type Repository interface {
-	BeginTx(ctx context.Context) (pgx.Tx, error)
+	BeginTx(ctx context.Context, opts ...pgx.TxOptions) (pgx.Tx, error)
 	CommitTx(ctx context.Context, tx pgx.Tx) error
 	RollbackTx(ctx context.Context, tx pgx.Tx) error
-	SaveRate(ctx context.Context, r rate.SaveRate) error
+	SaveRate(ctx context.Context, tx pgx.Tx, r rate.SaveRate) error
 }
 
 type DB struct {
@@ -43,8 +43,13 @@ func NewDB(ctx context.Context, dsn string) (*DB, error) {
 	return &DB{conn: pool}, nil
 }
 
-func (db *DB) BeginTx(ctx context.Context) (pgx.Tx, error) {
-	return db.conn.Begin(ctx)
+func (db *DB) BeginTx(ctx context.Context, opts ...pgx.TxOptions) (pgx.Tx, error) {
+	txOptions := pgx.TxOptions{}
+	if len(opts) > 0 {
+		txOptions = opts[0]
+	}
+
+	return db.conn.BeginTx(ctx, txOptions)
 }
 
 func (db *DB) CommitTx(ctx context.Context, tx pgx.Tx) error {
