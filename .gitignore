@@ -1,2 +1,8 @@
+# environment
 .env
+
+# ide
 .idea
+
+# binary
+app
