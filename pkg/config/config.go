@@ -6,14 +6,19 @@ import (
 )
 
 type Config struct {
-	AppName string
-	AppEnv  string
-	Server  ServerConfig
-	DB      DBConfig
+	AppName    string
+	AppEnv     string
+	Server     ServerConfig
+	DB         DBConfig
+	Prometheus PrometheusConfig
 }
 
 type ServerConfig struct {
 	Host string
+	Port string
+}
+
+type PrometheusConfig struct {
 	Port string
 }
 
@@ -29,6 +34,9 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		AppName: getEnv("APP_NAME", "nanaban"),
 		AppEnv:  getEnv("APP_ENV", "dev"),
+		Prometheus: PrometheusConfig{
+			Port: getEnv("PROMETHEUS_PORT", "9090"),
+		},
 		Server: ServerConfig{
 			Host: getEnv("APP_HOST", "http://localhost"),
 			Port: getEnv("APP_PORT", "8080"),

@@ -65,4 +65,3 @@ grpcurl -plaintext \
 | `DB_USER`     | Postgres user                | `main`    |
 | `DB_PASSWORD` | Postgres password            | `secret`  |
 | `DB_NAME`     | Postgres database name       | `postgres`|
-| `LOG_LEVEL`   | Log level (debug/info/error) | `debug`   |
