@@ -2,10 +2,18 @@ package repo
 
 import (
 	"context"
+	"github.com/GGnet123/tech_assignment_nanaban/internal/domain/rate"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
+
+type Repository interface {
+	BeginTx(ctx context.Context) (pgx.Tx, error)
+	CommitTx(ctx context.Context, tx pgx.Tx) error
+	RollbackTx(ctx context.Context, tx pgx.Tx) error
+	SaveRate(ctx context.Context, r rate.SaveRate) error
+}
 
 type DB struct {
 	conn *pgxpool.Pool
@@ -40,7 +48,17 @@ func (db *DB) BeginTx(ctx context.Context) (pgx.Tx, error) {
 }
 
 func (db *DB) CommitTx(ctx context.Context, tx pgx.Tx) error {
+	if tx == nil {
+		return nil
+	}
 	return tx.Commit(ctx)
+}
+
+func (db *DB) RollbackTx(ctx context.Context, tx pgx.Tx) error {
+	if tx == nil {
+		return nil
+	}
+	return tx.Rollback(ctx)
 }
 
 func (db *DB) Close() {

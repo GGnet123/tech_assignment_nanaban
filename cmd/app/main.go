@@ -9,6 +9,7 @@ import (
 	"github.com/GGnet123/tech_assignment_nanaban/internal/transport/grpc/rates"
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/config"
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/logger"
+	"github.com/GGnet123/tech_assignment_nanaban/pkg/tracer"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -19,6 +20,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -30,10 +32,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := context.Background()
 
 	log := logger.New()
+
+	shutdown, err := tracer.New(cfg.AppName)
+	if err != nil {
+		log.Error("Failed to initialize tracer: %v", slog.Any("error", err))
+		os.Exit(1)
+	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.Port))
 	if err != nil {
@@ -64,20 +71,30 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Error("serve: %v", slog.Any("error", err))
-		os.Exit(1)
-	}
+	serverErrChan := make(chan error)
+	go func() {
+		serverErrChan <- grpcServer.Serve(lis)
+	}()
 
-	// exit channels that listens to process exit
+	// exit channel that listens to process exit
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 
-	<-exit
-
+	select {
+	case err = <-serverErrChan:
+		log.Error("serve: %v", slog.Any("error", err))
+	case <-exit:
+		log.Info("shutdown signal received")
+	}
 	// graceful shutdown
 	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
 	grpcServer.GracefulStop()
 
 	db.Close()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer shutdownCancel()
+	if err = shutdown(shutdownCtx); err != nil {
+		log.Error("tracer shutdown: %v", slog.Any("error", err))
+	}
 }

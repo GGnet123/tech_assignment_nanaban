@@ -37,7 +37,7 @@ Returns the bid and ask prices at position `n` in the order book.
 ```sh
 grpcurl -plaintext \
   -d '{"method": 1, "n": 0}' \
-  localhost:8099 \
+  localhost:{YOUR_PORT} \
   v1.RateService/GetRates
 ```
 
@@ -50,7 +50,7 @@ Returns the average bid and ask prices across entries from index `n` to `m` (inc
 ```sh
 grpcurl -plaintext \
   -d '{"method": 2, "n": 0, "m": 4}' \
-  localhost:8099 \
+  localhost:{YOUR_PORT} \
   v1.RateService/GetRates
 ```
 
