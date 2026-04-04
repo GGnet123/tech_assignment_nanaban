@@ -118,16 +118,22 @@ func main() {
 		log.Info("shutdown signal received")
 	}
 	// graceful shutdown
+	log.Info("stopping grpc server")
 	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
 	grpcServer.GracefulStop()
+
+	log.Info("closing db connection")
 	db.Close()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 5*time.Second)
 	defer shutdownCancel()
 
+	log.Info("closing metrics server")
 	if err := metricsSrv.Shutdown(shutdownCtx); err != nil {
 		log.Error("metrics server failed to gracefully shutdown", zap.Error(err))
 	}
+
+	log.Info("closing tracer server")
 	if err := shutdown(shutdownCtx); err != nil {
 		log.Error("Tracer shutdown failed", zap.Error(err))
 	}
