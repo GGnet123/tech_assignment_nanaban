@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/sync/errgroup"
+	"math"
 	"strconv"
 )
 
@@ -139,7 +140,10 @@ func getAvgNM(ctx context.Context, N, M int, data *api2.OrderBook) (rate.Result,
 			total += val
 		}
 
-		response.Bid = total / float64(M-N+1)
+		avg := total / float64(M-N+1)
+
+		// round to have only 2 digits after comma
+		response.Bid = math.Round(avg*100) / 100
 		return nil
 	})
 
@@ -161,8 +165,9 @@ func getAvgNM(ctx context.Context, N, M int, data *api2.OrderBook) (rate.Result,
 			}
 			total += val
 		}
-
-		response.Ask = total / float64(M-N+1)
+		avg := total / float64(M-N+1)
+		// round to have only 2 digits after comma
+		response.Ask = math.Round(avg*100) / 100
 		return nil
 	})
 

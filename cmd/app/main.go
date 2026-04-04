@@ -11,11 +11,11 @@ import (
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/logger"
 	"github.com/GGnet123/tech_assignment_nanaban/pkg/tracer"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -34,23 +34,27 @@ func main() {
 
 	ctx := context.Background()
 
-	log := logger.New()
+	log, err := logger.New(cfg.AppEnv)
+	if err != nil {
+		fmt.Printf("Failed to create logger: %v\n", err)
+		os.Exit(1)
+	}
 
 	shutdown, err := tracer.New(cfg.AppName)
 	if err != nil {
-		log.Error("Failed to initialize tracer: %v", slog.Any("error", err))
+		log.Error("Failed to initialize tracer", zap.Error(err))
 		os.Exit(1)
 	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.Port))
 	if err != nil {
-		log.Error("listen: %v", slog.Any("error", err))
+		log.Error("Failed to listen", zap.Error(err))
 		os.Exit(1)
 	}
 
 	db, err := repo.NewDB(ctx, cfg.GetDSN())
 	if err != nil {
-		log.Error("Couldn't create db connection: %v", slog.Any("error", err))
+		log.Error("Failed to create db connection", zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -82,7 +86,7 @@ func main() {
 
 	select {
 	case err = <-serverErrChan:
-		log.Error("serve: %v", slog.Any("error", err))
+		log.Error("Server failed", zap.Error(err))
 	case <-exit:
 		log.Info("shutdown signal received")
 	}
@@ -95,6 +99,6 @@ func main() {
 	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 5*time.Second)
 	defer shutdownCancel()
 	if err = shutdown(shutdownCtx); err != nil {
-		log.Error("tracer shutdown: %v", slog.Any("error", err))
+		log.Error("Tracer shutdown failed", zap.Error(err))
 	}
 }

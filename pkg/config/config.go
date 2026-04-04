@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	AppName string
+	AppEnv  string
 	Server  ServerConfig
 	DB      DBConfig
 }
@@ -28,6 +29,7 @@ type DBConfig struct {
 func Load() (*Config, error) {
 	cfg := &Config{
 		AppName: getEnv("APP_NAME", "nanaban"),
+		AppEnv:  getEnv("APP_ENV", "dev"),
 		Server: ServerConfig{
 			Host: getEnv("APP_HOST", "http://localhost"),
 			Port: getEnv("APP_PORT", "8080"),

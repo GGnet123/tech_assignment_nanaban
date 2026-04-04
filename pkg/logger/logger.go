@@ -1,31 +1,14 @@
 package logger
 
 import (
-	"log/slog"
-	"os"
+	"go.uber.org/zap"
 )
 
-type Logger struct {
-	*slog.Logger
-}
-
-func New() *Logger {
-	var handler slog.Handler
-
-	level := new(slog.LevelVar)
-
-	switch os.Getenv("LOG_LEVEL") {
-	case "debug":
-		level.Set(slog.LevelDebug)
+func New(env string) (*zap.Logger, error) {
+	switch env {
+	case "production":
+		return zap.NewProduction()
 	default:
-		level.Set(slog.LevelInfo)
-	}
-	
-	handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	})
-
-	return &Logger{
-		Logger: slog.New(handler),
+		return zap.NewDevelopment()
 	}
 }
